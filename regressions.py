@@ -25,6 +25,16 @@ def least_squares(y, X):
     b = X.T.dot(y)
     return np.linalg.solve(a, b)
 
+######################
+## Ridge regression ##
+######################
+
+def ridge_regression(y, tx, lamb):
+    aI = lamb * np.identity(tx.shape[1])
+    a = tx.T.dot(tx) + aI
+    b = tx.T.dot(y)
+    return np.linalg.solve(a, b)
+
 ##########################
 ## Polynomial expansion ##
 ##########################
