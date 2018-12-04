@@ -30,7 +30,7 @@ class Crowd:
         self.models = []
         self.X = X
         self.y = y
-        self.name = name
+        self.crowd_name = name
         self.nb_layers = nb_layers
         self.nb_neurons = nb_neurons
         self.activation = activation
@@ -96,7 +96,7 @@ class Crowd:
         '''
         Generates a name defining the crowd.
         '''
-        return "{}_{}_{}_{}_{}_{}_{}".format(self.name(), self.nb_layers, self.nb_neurons, self.activation, \ self.regularization_factor, self.optimizer_factor, self.loss)
+        return "{}_{}_{}_{}_{}_{}_{}".format(self.crowd_name, self.nb_layers, self.nb_neurons, self.activation, self.regularization_factor, self.optimizer_factor, self.loss)
         
         
     def train_new_entities(self, number = 1):
@@ -153,7 +153,7 @@ class Crowd:
         plt.show()
         
         
-    def plot_error_dist_on_sample(self, sample, y_sample, func, show = True):
+    def plot_error_dist_on_sample(self, sample, y_sample, func, show = True, bins = 4):
         '''
         Plot error distribution on a single sample over all models as an histogram.
         The error is computed using the given function.
@@ -166,7 +166,7 @@ class Crowd:
         for m in self.models:
             pred = m.predict(np.asarray([sample]))
             error.append(func(np.asarray([pred]), np.asarray([y_sample])))
-        plt.hist(error, bins = self.size() // 4)
+        plt.hist(error, bins = bins)
         plt.title("Distribution of error over models for single sample")
         plt.xlabel("Error")
         plt.ylabel("Number of models")
