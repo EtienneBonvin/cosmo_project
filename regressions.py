@@ -11,7 +11,7 @@ import math
 
 def mse(y, X, w):
     e = y - X @ w
-    return 0.5*np.mean(e**2)
+    return 0.5*np.mean(e ** 2)
 
 def rmse(y, X, w):
     return math.sqrt(2*mse(y, X, w))
@@ -31,9 +31,67 @@ def least_squares(y, X):
 
 def ridge_regression(y, tx, lamb):
     aI = lamb * np.identity(tx.shape[1])
+    print(aI)
     a = tx.T.dot(tx) + aI
     b = tx.T.dot(y)
     return np.linalg.solve(a, b)
+
+################################
+## Loss functions & gradients ##
+################################
+
+def sign(x):
+    if x == 0:
+        return 0
+    else:
+        return 1 if x > 0 else -1
+        
+def mae(y, X, w):
+    e = y - X @ w
+    return np.mean(np.absolute(e))
+
+def mae_stoch_grad(y, X, w):
+    e = y - X.T @ w
+    return -1/len(y) * X.T * sign(e)
+
+def lasso(y, X, w, lambda_):
+    return mse(y, X, w) + lambda_ * np.sum(np.absolute(w))
+
+def lasso_stoch_grad(y, X, w, lambda_):
+    e = y - X.T @ w
+    s = np.vectorize(sign)
+    return ((-X).T * e) + lambda_ * s(w)
+
+#################################
+## Stochastic Gradient Descent ##
+#################################
+
+def sample_from(y, X, n = 1, seed = 1):
+    assert(n <= len(y))
+    y_shuf = y
+    X_shuf = X
+    np.random.seed(seed)
+    np.random.shuffle(y_shuf)
+    np.random.shuffle(X_shuf)
+    return y_shuf[:n], X_shuf[:n]
+    
+def stochastic_gradient_descent(y, X, initial_w, max_iters, gamma, loss_function, grad_loss_function, detail = False):
+    ws = []
+    losses = []
+    w = initial_w
+    
+    for n_iter in range(max_iters):
+        y_grad, X_grad = sample_from(y, X)
+        grad = grad_loss_function(y_grad, np.squeeze(X_grad), w)
+        w = w - gamma * grad
+        loss = loss_function(y, X, w)
+        ws.append(w)
+        losses.append(loss)
+        
+    if detail:
+        return ws, losses
+    else:
+        return ws[np.argmin(losses)]
 
 ##########################
 ## Polynomial expansion ##
@@ -57,7 +115,7 @@ def build_k_indices(y, k_fold, seed = 1):
     k_indices = [indices[k * interval: (k + 1) * interval] for k in range(k_fold)]
     return np.array(k_indices)
 
-def cross_validation(y, x, k_indices, k, degree, loss):
+def split_train_test(y, x, k_indices, k):
     # get k'th subgroup in test, others in train
     te_indice = k_indices[k]
     tr_indice = k_indices[~(np.arange(k_indices.shape[0]) == k)]
@@ -67,6 +125,10 @@ def cross_validation(y, x, k_indices, k, degree, loss):
     y_tr = y[tr_indice]
     x_te = x[te_indice]
     x_tr = x[tr_indice]
+    return y_te, y_tr, x_te, x_tr
+
+def cross_validation(y, x, k_indices, k, degree, loss):
+    y_te, y_tr, x_te, x_tr = split_train_test(y, x, k_indices, k)
     
     tx_tr = build_poly(x_tr, degree)
     tx_te = build_poly(x_te, degree)
