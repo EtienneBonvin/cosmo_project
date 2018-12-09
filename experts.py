@@ -28,8 +28,8 @@ class Experts:
         :param : String
         '''
         self.experts = []
-        self.experts_sets = []
         self.gateway = None
+        self.gateway_matrix = None
         self.gateway_trained = False
         self.X = X
         self.y = y
@@ -71,13 +71,13 @@ class Experts:
     def __create_and_compile_gateway(self):
         gateway = tf.keras.Sequential()
         for i in range(self.nb_layers):
-            gateway.add(layers.Dense(self.nb_neurons, activation='softmax', \
-                                   kernel_regularizer=tf.keras.regularizers.l2(self.regularization_factor)))
+            gateway.add(layers.Dense(self.nb_neurons, activation='relu', \
+                                    kernel_regularizer=tf.keras.regularizers.l2(0.0005)))#0.0005 gives good results with 8 brains
         gateway.add(layers.Dense(len(self.experts), activation = 'softmax'))
         
-        gateway.compile(optimizer=tf.train.AdamOptimizer(self.optimizer_factor),
-                  loss=self.loss,
-                  metrics=['mae'])
+        gateway.compile(optimizer=tf.train.AdamOptimizer(),
+                  loss='sparse_categorical_crossentropy',
+                  metrics=['accuracy'])
         return gateway
     
     
@@ -110,19 +110,20 @@ class Experts:
         self.gateway_trained = False
         
         
-    def __build_experts_sets(self, threshold):
-        experts_sets = []
-        for expert in self.experts:
-            expert_set = []
+    def __build_gateway_matrix(self):
+        gateway_matrix = np.zeros(len(self.X))
+        best_pred = np.empty(len(self.X))
+        best_pred.fill(100)
+        for i, expert in enumerate(self.experts):
             predictions = expert.predict(self.X)
-            for i in range(len(predictions)):
-                if abs(predictions[i] - self.y[i]) < threshold:
-                    expert_set.append(self.X[i])
-            experts_sets.append(np.asarray(expert_set))
-        self.experts_sets = np.asarray(experts_sets)
+            for j in range(len(predictions)):
+                if abs(predictions[j] - self.y[j]) < best_pred[j]:
+                    best_pred[j] = abs(predictions[j] - self.y[j])
+                    gateway_matrix[j] = i
+        self.gateway_matrix = gateway_matrix
         
         
-    def train_gateway(self, threshold):
+    def train_gateway(self):
         
         print("####################")
         print("# Creating gateway #")
@@ -141,24 +142,13 @@ class Experts:
         EPOCHS = 200
         BATCH_SIZE = 32
         VALIDATION_SPLIT = 0.1
-        early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20)
+        early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_acc', patience=20)
         
-        if len(self.experts_sets) != len(self.experts):
-            self.__build_experts_sets(threshold)
-        
-        y_gateway = []
-        for row in self.X:
-            y_row = []
-            for s in self.experts_sets:
-                if row in s:
-                    y_row.append(1)
-                else:
-                    y_row.append(0)
-            y_gateway.append(np.asarray(y_row))
-        y_gateway = np.asarray(y_gateway)
+        if self.gateway_matrix is None:
+            self.__build_gateway_matrix()
         
         
-        self.gateway.fit(self.X, y_gateway, \
+        self.gateway.fit(self.X, self.gateway_matrix, \
                   epochs=EPOCHS, batch_size=BATCH_SIZE, validation_split = VALIDATION_SPLIT, \
                   callbacks=[early_stop, cp_callback])
         
@@ -181,7 +171,7 @@ class Experts:
             self.__train_one_entity()
         
         
-    def predict(self, X_test, threshold=0.2):
+    def predict(self, X_test):
         '''
         Predict the output of the given matrix.
         :param : two dimensional ndarray(float)
@@ -189,15 +179,13 @@ class Experts:
         '''
         
         if not self.gateway_trained:
-            self.train_gateway(threshold)
+            self.train_gateway()
         
         predictions = []
         for expert in self.experts:
             predictions.append(expert.predict(X_test, batch_size=32))
+            
         weights = self.gateway.predict(X_test, batch_size=32)
-        
-        print(np.asarray(predictions).shape, weights.shape)
-        
         
         final_prediction = []
         for i in range(len(X_test)):
@@ -221,11 +209,18 @@ class Experts:
         return np.mean(predictions, axis=0)
     
     
-    def print_gateway(self):
+    def get_gateway(self, X_test):
         if self.gateway_trained:
-            print(self.gateway)
+            return self.gateway.predict(X_test, batch_size=32)
         else:
             print("Please train the gateway before displaying it.")
+            
+            
+    def get_gateway_matrix(self):
+        if self.gateway_trained:
+            return self.gateway_matrix
+        else:
+            print("Please train the gateway to access the gateway matrix.")
     
     
     def plot_crowd_error(self, X_test, y_test, func):
