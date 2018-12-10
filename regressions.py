@@ -31,7 +31,6 @@ def least_squares(y, X):
 
 def ridge_regression(y, tx, lamb):
     aI = lamb * np.identity(tx.shape[1])
-    print(aI)
     a = tx.T.dot(tx) + aI
     b = tx.T.dot(y)
     return np.linalg.solve(a, b)
@@ -45,6 +44,13 @@ def sign(x):
         return 0
     else:
         return 1 if x > 0 else -1
+    
+def mse_loss(y, X, w):
+    return mse(y, X, w)
+
+def mse_stoch_grad(y, X, w):
+    e = y - X.T @ w
+    return (-X).T * e
         
 def mae(y, X, w):
     e = y - X @ w
@@ -52,7 +58,8 @@ def mae(y, X, w):
 
 def mae_stoch_grad(y, X, w):
     e = y - X.T @ w
-    return -1/len(y) * X.T * sign(e)
+    s = np.vectorize(sign)
+    return -1/len(X) * X.T * s(e)
 
 def lasso(y, X, w, lambda_):
     return mse(y, X, w) + lambda_ * np.sum(np.absolute(w))
@@ -66,24 +73,23 @@ def lasso_stoch_grad(y, X, w, lambda_):
 ## Stochastic Gradient Descent ##
 #################################
 
-def sample_from(y, X, n = 1, seed = 1):
+def sample_from(y, X, n = 1):
     assert(n <= len(y))
     y_shuf = y
     X_shuf = X
-    np.random.seed(seed)
     np.random.shuffle(y_shuf)
     np.random.shuffle(X_shuf)
     return y_shuf[:n], X_shuf[:n]
     
-def stochastic_gradient_descent(y, X, initial_w, max_iters, gamma, loss_function, grad_loss_function, detail = False):
-    ws = []
+def stochastic_gradient_descent(y, X, initial_w, max_iters, gamma, loss_function, grad_loss_function, batch_size = 1, detail = False):
+    ws = [initial_w]
     losses = []
     w = initial_w
     
     for n_iter in range(max_iters):
-        y_grad, X_grad = sample_from(y, X)
-        grad = grad_loss_function(y_grad, np.squeeze(X_grad), w)
-        w = w - gamma * grad
+        y_batch, X_batch = sample_from(y, X, n = batch_size)
+        grad = np.mean([grad_loss_function(y_i, X_i, w) for (y_i, X_i) in zip(y_batch, X_batch)], axis = 0)
+        w = w - (gamma/(n_iter+1)) * grad
         loss = loss_function(y, X, w)
         ws.append(w)
         losses.append(loss)
@@ -91,7 +97,8 @@ def stochastic_gradient_descent(y, X, initial_w, max_iters, gamma, loss_function
     if detail:
         return ws, losses
     else:
-        return ws[np.argmin(losses)]
+        #return ws[np.argmin(losses)]
+        return ws[0]
 
 ##########################
 ## Polynomial expansion ##
@@ -129,10 +136,9 @@ def split_train_test(y, x, k_indices, k):
 
 def cross_validation(y, x, k_indices, k, degree, loss):
     y_te, y_tr, x_te, x_tr = split_train_test(y, x, k_indices, k)
-    
     tx_tr = build_poly(x_tr, degree)
     tx_te = build_poly(x_te, degree)
-
+    
     w = loss(y_tr, tx_tr)
 
     loss_tr = rmse(y_tr, tx_tr, w)
