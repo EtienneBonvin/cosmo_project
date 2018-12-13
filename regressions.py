@@ -52,14 +52,14 @@ def mse_stoch_grad(y, X, w):
     e = y - X.T @ w
     return (-X).T * e
         
-def mae(y, X, w):
+def mae(y, X, w, lambda_ = 0):
     e = y - X @ w
-    return np.mean(np.absolute(e))
+    return np.mean(np.abs(e)) + lambda_ * np.sum(np.square(w))
 
-def mae_stoch_grad(y, X, w):
+def mae_stoch_grad(y, X, w, lambda_ = 0):
     e = y - X.T @ w
     s = np.vectorize(sign)
-    return -1/len(X) * X.T * s(e)
+    return -1/len(X) * X.T * s(e) + 2*lambda_*w
 
 def lasso(y, X, w, lambda_):
     return mse(y, X, w) + lambda_ * np.sum(np.absolute(w))
@@ -85,7 +85,6 @@ def stochastic_gradient_descent(y, X, initial_w, max_iters, gamma, loss_function
     ws = [initial_w]
     losses = []
     w = initial_w
-    
     for n_iter in range(max_iters):
         y_batch, X_batch = sample_from(y, X, n = batch_size)
         grad = np.mean([grad_loss_function(y_i, X_i, w) for (y_i, X_i) in zip(y_batch, X_batch)], axis = 0)
@@ -97,8 +96,7 @@ def stochastic_gradient_descent(y, X, initial_w, max_iters, gamma, loss_function
     if detail:
         return ws, losses
     else:
-        #return ws[np.argmin(losses)]
-        return ws[0]
+        return ws[np.argmin(losses)]
 
 ##########################
 ## Polynomial expansion ##
