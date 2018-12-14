@@ -20,7 +20,7 @@ class Experts:
     def __init__(self, X, y, name, nb_layers=8, nb_neurons=128, activation='relu', regularization_factor=0.01, \
                 optimizer_factor=0.001, loss='mse'):
         '''
-        Creates a Crowd. The X matrix will be the training feature matrix, the y matrix are the predictions for the given X matrix. 
+        Creates a Crowd of Experts. The X matrix will be the training feature matrix, the y matrix are the predictions for the given X matrix. 
         Initially, the crowd is empty.
         The crowd should also be given a name in order to be saved and restored later.
         :param : two dimensional ndarray(float)
@@ -28,9 +28,9 @@ class Experts:
         :param : String
         '''
         self.experts = []
-        self.gateway = None
-        self.gateway_matrix = None
-        self.gateway_trained = False
+        self.gatingnet = None
+        self.gatingnet_matrix = None
+        self.gatingnet_trained = False
         self.X = X
         self.y = y
         self.crowd_name = name
@@ -68,17 +68,21 @@ class Experts:
         return expert
     
     
-    def __create_and_compile_gateway(self):
-        gateway = tf.keras.Sequential()
+    def __create_and_compile_gatingnet(self):
+        '''
+        Create the gating network used to specialize the brains. 
+        :return : tf.keras.Sequential
+        '''
+        gatingnet = tf.keras.Sequential()
         for i in range(self.nb_layers):
-            gateway.add(layers.Dense(self.nb_neurons, activation='relu', \
+            gatingnet.add(layers.Dense(self.nb_neurons, activation='relu', \
                                     kernel_regularizer=tf.keras.regularizers.l2(0.0001)))#0.0005 gives good results with 8 brains
-        gateway.add(layers.Dense(len(self.experts), activation = 'softmax'))
+        gatingnet.add(layers.Dense(len(self.experts), activation = 'softmax'))
         
-        gateway.compile(optimizer=tf.train.AdamOptimizer(),
+        gatingnet.compile(optimizer=tf.train.AdamOptimizer(),
                   loss='sparse_categorical_crossentropy',
                   metrics=['accuracy'])
-        return gateway
+        return gatingnet
     
     
     def __train_one_entity(self):
@@ -107,11 +111,15 @@ class Experts:
                   callbacks=[early_stop, cp_callback])
         self.experts.append(expert)
         
-        self.gateway_trained = False
+        self.gatingnet_trained = False
         
         
-    def __build_gateway_matrix(self):
-        gateway_matrix = np.zeros(len(self.X))
+    def __build_gatingnet_matrix(self):
+        '''
+        Build the gating network matrix. Each sample is associated to the brain for which the prediction was the best.
+        :return : ndarray(int)
+        '''
+        gatingnet_matrix = np.zeros(len(self.X))
         best_pred = np.empty(len(self.X))
         best_pred.fill(100)
         for i, expert in enumerate(self.experts):
@@ -119,21 +127,23 @@ class Experts:
             for j in range(len(predictions)):
                 if abs(predictions[j] - self.y[j]) < best_pred[j]:
                     best_pred[j] = abs(predictions[j] - self.y[j])
-                    gateway_matrix[j] = i
-        self.gateway_matrix = gateway_matrix
+                    gatingnet_matrix[j] = i
+        self.gatingnet_matrix = gatingnet_matrix
         
         
-    def train_gateway(self):
-        
-        print("####################")
-        print("# Creating gateway #")
-        print("####################")
-        self.gateway = self.__create_and_compile_gateway()
+    def train_gatingnet(self):
+        '''
+        Create and train the gating network. The accuracy of the network depends on the categorizable aspect of the data.
+        '''
+        print("######################")
+        print("# Creating gatingnet #")
+        print("######################")
+        self.gatingnet = self.__create_and_compile_gatingnet()
         
         if not os.path.exists("session/"+self.name()):
             os.makedirs("session/"+self.name())
         
-        checkpoint_path = "session/"+self.name()+"/gateway"
+        checkpoint_path = "session/"+self.name()+"/gatingnet"
         checkpoint_dir = os.path.dirname(checkpoint_path)
         
         # Create checkpoint callback
@@ -144,15 +154,15 @@ class Experts:
         VALIDATION_SPLIT = 0.1
         early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_acc', patience=20)
         
-        if self.gateway_matrix is None:
-            self.__build_gateway_matrix()
+        if self.gatingnet_matrix is None:
+            self.__build_gatingnet_matrix()
         
         
-        self.gateway.fit(self.X, self.gateway_matrix, \
+        self.gatingnet.fit(self.X, self.gatingnet_matrix, \
                   epochs=EPOCHS, batch_size=BATCH_SIZE, validation_split = VALIDATION_SPLIT, \
                   callbacks=[early_stop, cp_callback])
         
-        self.gateway_trained = True
+        self.gatingnet_trained = True
         
         
     def name(self):
@@ -178,14 +188,14 @@ class Experts:
         :return : ndarray(float)
         '''
         
-        if not self.gateway_trained:
-            self.train_gateway()
+        if not self.gatingnet_trained:
+            self.train_gatingnet()
         
         predictions = []
         for expert in self.experts:
             predictions.append(expert.predict(X_test, batch_size=32))
             
-        weights = self.gateway.predict(X_test, batch_size=32)
+        weights = self.gatingnet.predict(X_test, batch_size=32)
         
         # Weighted average prediction
         final_prediction = []
@@ -210,18 +220,29 @@ class Experts:
         return np.mean(predictions, axis=0)
     
     
-    def get_gateway(self, X_test):
-        if self.gateway_trained:
-            return self.gateway.predict(X_test, batch_size=32)
+    def get_gatingnet(self, X_test):
+        '''
+        Return the predictions of the gating network on the given sample matrix if the gating network has already been created and trained.
+        The result if a vector where the value at index i is the probability that the brain i should be choosen for the prediction.
+        :param : 2 dimensional ndarray(float)
+        :return : ndarray(float)
+        '''
+        if self.gatingnet_trained:
+            return self.gatingnet.predict(X_test, batch_size=32)
         else:
-            print("Please train the gateway before displaying it.")
+            print("Please train the gatingnet before displaying it.")
             
             
-    def get_gateway_matrix(self):
-        if self.gateway_trained:
-            return self.gateway_matrix
+    def get_gatingnet_matrix(self):
+        '''
+        Return the gating network matrix if it has already been created.
+        The result is a vector where the value at index i is the number of the brain which performed best on sample i.
+        :return : ndarray(int)    
+        '''
+        if self.gatingnet_trained:
+            return self.gatingnet_matrix
         else:
-            print("Please train the gateway to access the gateway matrix.")
+            print("Please train the gatingnet to access the gatingnet matrix.")
     
     
     def plot_crowd_error(self, X_test, y_test, func):
