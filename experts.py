@@ -72,7 +72,7 @@ class Experts:
         gateway = tf.keras.Sequential()
         for i in range(self.nb_layers):
             gateway.add(layers.Dense(self.nb_neurons, activation='relu', \
-                                    kernel_regularizer=tf.keras.regularizers.l2(0.0005)))#0.0005 gives good results with 8 brains
+                                    kernel_regularizer=tf.keras.regularizers.l2(0.0001)))#0.0005 gives good results with 8 brains
         gateway.add(layers.Dense(len(self.experts), activation = 'softmax'))
         
         gateway.compile(optimizer=tf.train.AdamOptimizer(),
@@ -187,6 +187,7 @@ class Experts:
             
         weights = self.gateway.predict(X_test, batch_size=32)
         
+        # Weighted average prediction
         final_prediction = []
         for i in range(len(X_test)):
             pred = 0
