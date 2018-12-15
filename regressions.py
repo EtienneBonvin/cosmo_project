@@ -67,7 +67,7 @@ def lasso(y, X, w, lambda_):
 def lasso_stoch_grad(y, X, w, lambda_):
     e = y - X.T @ w
     s = np.vectorize(sign)
-    return ((-X).T * e) + lambda_ * s(w)
+    return (-X.T * e) + lambda_ * s(w)
 
 #################################
 ## Stochastic Gradient Descent ##
