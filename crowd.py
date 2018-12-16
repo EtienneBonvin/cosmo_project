@@ -13,12 +13,13 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
+import timeit
 
 
 class Crowd:
    
     def __init__(self, X, y, name, nb_layers=8, nb_neurons=128, activation='relu', regularization_factor=0.01, \
-                optimizer_factor=0.001, loss='mse'):
+                optimizer_factor=0.001, loss='mse', validation_split=0.1):
         '''
         Creates a Crowd. The X matrix will be the training feature matrix, the y matrix are the predictions for the given X matrix. 
         Initially, the crowd is empty.
@@ -37,6 +38,7 @@ class Crowd:
         self.regularization_factor = regularization_factor
         self.optimizer_factor = optimizer_factor
         self.loss = loss
+        self.validation_split = validation_split
         
         
     def size(self):
@@ -83,8 +85,11 @@ class Crowd:
         
         EPOCHS = 200
         BATCH_SIZE = 32
-        VALIDATION_SPLIT = 0.1
-        early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20)
+        VALIDATION_SPLIT = self.validation_split
+        if VALIDATION_SPLIT > 0:
+            early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20)
+        else:
+            early_stop = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=20)
         
         model.fit(self.X, self.y, \
                   epochs=EPOCHS, batch_size=BATCH_SIZE, validation_split = VALIDATION_SPLIT, \
@@ -97,6 +102,10 @@ class Crowd:
         Generates a name defining the crowd.
         '''
         return "{}_{}_{}_{}_{}_{}_{}".format(self.crowd_name, self.nb_layers, self.nb_neurons, self.activation, self.regularization_factor, self.optimizer_factor, self.loss)
+    
+    
+    def get_models(self):
+        return self.models
         
         
     def train_new_entities(self, number = 1):
@@ -146,10 +155,24 @@ class Crowd:
             pred = self.subcrowd_predict(X_test, i + 1)
             err = func(pred, y_test)
             error.append(err)
-        plt.plot(error)
+        plt.plot(list(range(1, self.size())), error)
         plt.title("Error vs. number of entities used for prediction")
         plt.xlabel("Number of entities used")
         plt.ylabel("Error")
+        plt.show()
+        
+        
+    def plot_crowd_pred_time(self, X_test, y_test, func):
+        times = []
+        for i in range(len(self.models) - 1):
+            start = timeit.default_timer()
+            self.subcrowd_predict(X_test, i + 1)
+            stop = timeit.default_timer()
+            times.append(stop - start)
+        plt.plot(list(range(1, self.size())), times)
+        plt.title("Time vs. number of entities used for prediction")
+        plt.xlabel("Number of entities used")
+        plt.ylabel("Time (in seconds)")
         plt.show()
         
         

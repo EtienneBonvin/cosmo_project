@@ -13,6 +13,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
 
 
 class Experts:
@@ -40,6 +41,8 @@ class Experts:
         self.regularization_factor = regularization_factor
         self.optimizer_factor = optimizer_factor
         self.loss = loss
+        self.kmeans = None
+        self.brain_assignments = None
         
         
     def size(self):
@@ -130,6 +133,69 @@ class Experts:
                     gatingnet_matrix[j] = i
         self.gatingnet_matrix = gatingnet_matrix
         
+    
+    def __get_cluster_i(self, assignments, i):
+        '''
+        Return all the samples in the cluster number i as well as the corresponding values.
+        The list (index, cluster_index) should be given as argument.
+        :param : List(int, int)
+        :return : 2 dimensional ndarray(float), ndarray(float)
+        '''
+        cluster = []
+        vals = []
+        for j, a in enumerate(assignments):
+            if a == i:
+                cluster.append(self.X[j])
+                vals.append(self.y[j])
+        return np.asarray(cluster), np.asarray(vals)
+    
+    
+    def __replace_max(self, min_loss, best_brain_idx, loss, j):
+        '''
+        Replace the value of the maximum error in the array as well as the corresponding index of the given loss of the (loss, index) is less than the ones in the array.
+        Changes are made in-place.
+        :param : List(float)
+        :param : List(int)
+        :param : float
+        :param : int
+        '''
+        max_found = 0
+        max_idx = -1
+        for i, l in enumerate(min_loss):
+            if l > max_found:
+                max_found = l
+                max_idx = i
+                
+        if loss < max_found:
+            min_loss[max_idx] = loss
+            best_brain_idx[max_idx] = j
+    
+    
+    def clusterize(self, loss_func, nb_clusters):
+        '''
+        Create the clusters for the data and select the optimal brains for the predictions.
+        :param : function (List(float), List(float)) -> float
+        :param : int
+        '''
+        print("##############")
+        print("# Clustering #")
+        print("##############")
+        if self.kmeans == None:
+            self.kmeans = KMeans(n_clusters=nb_clusters, random_state=0, verbose=1).fit(self.X)
+        assignments = self.kmeans.labels_
+        self.brain_assignments = {}
+        for i in range(nb_clusters):
+            cluster_i, vals_i = self.__get_cluster_i(assignments, i)
+            best_brain_idx = np.zeros(self.size() // nb_clusters)
+            best_brain_idx.fill(-1)
+            min_loss = np.zeros(self.size() // nb_clusters)
+            min_loss.fill(1000)
+            for j in range(self.size()):
+                loss = loss_func(vals_i, self.experts[j].predict(cluster_i))
+                self.__replace_max(min_loss, best_brain_idx, loss, j)
+            print("Cluster {} ({} entities) : brains : {}, losses : {}".format(i, len(cluster_i), best_brain_idx, min_loss))
+            self.brain_assignments[i] = best_brain_idx
+        
         
     def train_gatingnet(self):
         '''
@@ -205,6 +271,33 @@ class Experts:
                 pred += predictions[j][i][0] * weights[i][j]
             final_prediction.append(pred)
         return np.asarray(final_prediction)
+    
+    
+    def predict_kmeans(self, X_test, loss_func, nb_clusters):
+        '''
+        Predict the values using the k-means clustering to determine best brains for prediction.
+        :param : 2 dimensional ndarray(float)
+        :param : func (List(float), List(float)) -> float
+        :param : int
+        :return : ndarray(float)
+        '''
+        if self.brain_assignments == None:
+            self.clusterize(loss_func, nb_clusters)
+            
+        clusters_assignment = self.kmeans.predict(X_test)
+        brain_assignments = map(lambda c : self.brain_assignments[c], clusters_assignment)
+        
+        brain_predictions = np.asarray([expert.predict(X_test) for expert in self.experts])
+            
+            
+        final_predictions = []
+        for i, j in enumerate(brain_assignments):
+            pred = []
+            for idx in j:
+                pred.append(brain_predictions[int(idx)][i][0])
+            final_predictions.append(np.mean(pred))
+        return final_predictions
+        
     
     
     def subcrowd_predict(self, X_test, number):
