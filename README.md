@@ -5,6 +5,8 @@ This README file details the different implementations we went through to solve 
 
 ## Data Processing and Features Reduction
 
+The code used to generate our reduced matrix can be found in the notebook PreProcessing.ipynb. It is shown there that the main algorithm used is a Principal Component Analysis, which allows us to reduce the number of features from 15k to 4k and still keep the same Root-Mean-Squarre-Error when appliying Rigde Regression with a very small lambda. Normalization and whitening was also applyied to the data to ensure the best predictions possible.
+
 ## Machine Learning
 
 ## Deep Learning
