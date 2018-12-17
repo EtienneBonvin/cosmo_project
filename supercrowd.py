@@ -1,3 +1,14 @@
+'''
+SuperCrowd class. Enable to combine multiple crowds of different types as long as they have a predict method. 
+This may reduce the error if the biases of the crowds composing the supercrowd are sufficiently different.
+Filename : supercrowd.py
+Author : Bonvin Etienne
+Creation date : 05/12/18
+Last modified : 17/12/18
+'''
+
+
+
 import numpy as np
 
 
@@ -33,7 +44,4 @@ class SuperCrowd:
         :param : two dimensional ndarray(float)
         :return : ndarray(float)
         '''
-        predictions = []
-        for crowd in self.crowds:
-            predictions.append(crowd.predict(X))
-        return np.mean(predictions, axis = 0)
+        return np.mean([crowd.predict(X) for crowd in self.crowds], axis = 0)

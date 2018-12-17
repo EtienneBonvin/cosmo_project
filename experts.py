@@ -3,6 +3,7 @@ Experts class. Allow to instantiate a crowd of experts neural networks, signific
 Each neural networks is trained independantly and is supposed to be an expert for a subset of the samples. The prediction is then made using the best experts.
 
 Filename : experts.py
+Author : Bonvin Etienne
 Creation date : 06/12/18
 Last modified : 06/12/18
 '''
@@ -80,6 +81,7 @@ class Experts:
         for i in range(self.nb_layers):
             gatingnet.add(layers.Dense(self.nb_neurons, activation='relu', \
                                     kernel_regularizer=tf.keras.regularizers.l2(0.0001)))#0.0005 gives good results with 8 brains
+        # We use softmax activation to get a probability that the expert i should be chosen.
         gatingnet.add(layers.Dense(len(self.experts), activation = 'softmax'))
         
         gatingnet.compile(optimizer=tf.train.AdamOptimizer(),
@@ -107,6 +109,8 @@ class Experts:
         EPOCHS = 200
         BATCH_SIZE = 32
         VALIDATION_SPLIT = 0.1
+        
+        # Early stop callback
         early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20)
         
         expert.fit(self.X, self.y, \
@@ -114,6 +118,7 @@ class Experts:
                   callbacks=[early_stop, cp_callback])
         self.experts.append(expert)
         
+        # When an expert is added, we need to train the gating network again
         self.gatingnet_trained = False
         
         
