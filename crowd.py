@@ -3,8 +3,9 @@ Crowd class. Allow to instantiate a crowd of neural networks, significantly decr
 Each neural networks is trained independantly. The prediction are then made by averaging all the predictions of the neural networks of the crowd.
 
 Filename : crowd.py
+Author : Bonvin Etienne
 Creation date : 03/12/18
-Last modified : 03/12/18
+Last modified : 17/12/18
 '''
 
 
@@ -39,6 +40,7 @@ class Crowd:
         self.optimizer_factor = optimizer_factor
         self.loss = loss
         self.validation_split = validation_split
+        self.stacker = None
         
         
     def size(self):
@@ -86,10 +88,10 @@ class Crowd:
         EPOCHS = 200
         BATCH_SIZE = 32
         VALIDATION_SPLIT = self.validation_split
-        if VALIDATION_SPLIT > 0:
-            early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20)
-        else:
-            early_stop = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=20)
+        
+        # Create ealy stop callback to stop earlier loss has converged to avoid overfitting.
+        early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss' if VALIDATION_SPLIT > 0 else 'loss', \
+                                                      patience=20)
         
         model.fit(self.X, self.y, \
                   epochs=EPOCHS, batch_size=BATCH_SIZE, validation_split = VALIDATION_SPLIT, \
@@ -99,12 +101,16 @@ class Crowd:
         
     def name(self):
         '''
-        Generates a name defining the crowd.
+        Generates a unique name defining the crowd.
         '''
         return "{}_{}_{}_{}_{}_{}_{}".format(self.crowd_name, self.nb_layers, self.nb_neurons, self.activation, self.regularization_factor, self.optimizer_factor, self.loss)
     
     
     def get_models(self):
+        '''
+        Give the list of all the models of the crowd.
+        :return : list(tensorflow.keras.models)
+        '''
         return self.models
         
         
@@ -123,10 +129,31 @@ class Crowd:
         :param : two dimensional ndarray(float)
         :return : ndarray(float)
         '''
-        predictions = []
-        for model in self.models:
-            predictions.append(model.predict(X_test, batch_size=32))
-        return np.mean(predictions, axis = 0)
+        return np.mean([model.predict(X_test, batch_size=32) for model in self.models], axis = 0)
+    
+    
+    def predict_stacked(self, X_test):
+        stacker = self.__create_and_compile_model()
+        
+        EPOCHS = 200
+        BATCH_SIZE = 32
+        VALIDATION_SPLIT = self.validation_split
+        
+        # Create ealy stop callback to stop earlier loss has converged to avoid overfitting.
+        early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss' if VALIDATION_SPLIT > 0 else 'loss', \
+                                                      patience=20)
+        
+        predictions = np.asarray([model.predict(self.X) for model in self.models])
+        print(self.X[0].shape, predictions.T[0].shape)
+        new_X = np.asarray([np.concatenate([self.X[i], predictions.T[0][i]]) for i in range(len(self.X))])
+        stacker.fit(new_X, self.y, \
+                  epochs=EPOCHS, batch_size=BATCH_SIZE, validation_split = VALIDATION_SPLIT, \
+                  callbacks=[early_stop])
+        
+        test_pred = np.asarray([model.predict(X_test) for model in self.models])
+        new_X_test = np.asarray([np.concatenate([X_test[i], test_pred.T[0][i]]) for i in range(len(X_test))])
+        return stacker.predict(new_X_test, batch_size = 32)
+        
     
     
     def subcrowd_predict(self, X_test, number):
@@ -136,10 +163,7 @@ class Crowd:
         :param : int
         :return : ndarray(float)
         '''
-        predictions = []
-        for model in self.models[:number]:
-            predictions.append(model.predict(X_test, batch_size=32))
-        return np.mean(predictions, axis=0)
+        return np.mean([model.predict(X_test, batch_size=32) for model in self.models[:number]], axis = 0)
     
     
     def plot_crowd_error(self, X_test, y_test, func):
@@ -162,7 +186,11 @@ class Crowd:
         plt.show()
         
         
-    def plot_crowd_pred_time(self, X_test, y_test, func):
+    def plot_crowd_pred_time(self, X_test):
+        '''
+        Plot the prediction time with respect to the number of entites used to make the prediction.
+        :param : 2 dimensional ndarray(float)
+        '''
         times = []
         for i in range(len(self.models) - 1):
             start = timeit.default_timer()
