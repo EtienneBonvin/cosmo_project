@@ -165,5 +165,3 @@ def cross_validation(y, x, k_indices, k, degree, loss):
     loss_tr = rmse(y_tr, tx_tr, w)
     loss_te = rmse(y_te, tx_te, w)
     return loss_tr, loss_te, w
-    
-    
