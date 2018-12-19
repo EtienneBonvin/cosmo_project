@@ -211,8 +211,10 @@ class CollaborativeCrowd:
         :param : boolean
         '''
         error = []
+        tmp = sample
         for m in self.models:
-            pred = m.predict(np.asarray([sample]))
+            pred = m.predict(np.asarray([tmp]))
+            tmp = np.concatenate([tmp, pred[0]], axis = 0)
             error.append(func(np.asarray([pred]), np.asarray([y_sample])))
         plt.hist(error, bins = bins)
         plt.title("Distribution of error over models for single sample")
