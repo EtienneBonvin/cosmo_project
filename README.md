@@ -63,3 +63,6 @@ This approach decreased our error again by a small amount, still noticeable. How
 
 ## Conclusion
 Among all methods that we have tried and cross-validated, the one that worked best is __[Etienne?]__ producing a __RMSE of X.XX__, which is almost the half of our first goal was. Moreover, it's important to be noted that this results has been obtained without any domain-specific knowledge. Therefore, we expect the COSMO to be able to increase the precision of the predictions by combining our algorithms with their understanding of the involved scientific material. Finally, we have tried different feature reduction techniques and showed which worked well and which not, which is also a valuable information because of evident performance reasons.
+
+> "Go TF..."
+Michele Ceriotti
