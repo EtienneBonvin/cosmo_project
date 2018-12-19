@@ -11,13 +11,13 @@ The code used to generate our reduced matrix can be found in the notebook PrePro
 
 ## Deep Learning
 
-The core code for our work regarding Deep Learning is located in the __Deep_Learning_Approch.ipynb__ notebook. There you will find all our tests, from the __single neural network__ to the __crowd of experts__ along with the different optimizations we made.
+The application of the code for our work regarding Deep Learning is located in the __Deep_Learning_Approch.ipynb__ notebook. There you will find all our tests, from the __single neural network__ to the __supercrowd__ along with the different optimizations we made.
 
-However, there's two implementations that needed a bit more application and modularity, namely the implementation of the __Crowd__ and of the one of the __Experts__.
+However, there's some implementations that needed a bit more application and modularity, namely the implementation of the __Crowd__, the __Experts__, the __CollaborativeCrowd__ and finally the __SuperCrowd__.
 
 ### Crowd predictions
 
-Based on the principle of the _Wisdom of Crowds_, we created a crowd of neural networks which will reduce the variance of our predictions and hence reduce the overall error. This specific implementation necessited a class to itself for modularity and cleaness reasons. All the code for this class is located in the file crowd.py. Note that the created crowds are automatically saved in the session folder to avoid redoing heavy computations. It has also been made so that it is highly parametrable, again to enforce modularity.
+Based on the principle of the _Wisdom of Crowds_, we created a crowd of neural networks which will reduce the variance of our predictions and hence reduce the overall error. This specific implementation necessited a class to itself for modularity and cleaness reasons. All the code for this class is located in the file crowd.py. Note that the created crowds are automatically saved in the _session_ folder to avoid redoing heavy computations. It has also been made so that it is highly parametrable, again to enforce modularity.
 
 ### Experts predictions
 
@@ -28,3 +28,18 @@ The categorization has been made in two different fashion :
 - Using a k-means algorithm to cluster the data prior to the prediction, then evaluate which neural networks perform best on each cluster and finally at prediction time, assign the sample to evaluate to closer cluster and use the related neural networks to obtain the prediction.
 
 However, none of this techniques gave us good results, or at least results that are not better than what we had before. This may be explained by the fact that our data is not easily categorizable which was a prerequisite for the method to work efficiently. Hence we dropped the idea of improving our predictions using this technique but we let it in this notebook for completness.
+
+### Collaborative Crowd
+
+In this approach, we try to make each neural network joining the crowd learn from the predictions of the previously added networks, hoping that it will reduce our error even further. Hence the predictions of the others are added to the training and prediction matrix. The code for this class is located in collaborative_crowd.py.
+
+This approach gives us results that are a bit better than the ones of the simple crowd, however there's no break through.
+
+### Super Crowd
+
+The idea behind this one is rather simple : we take several highly precise crowds and combine them into one through a Composite Design Pattern. The prediction is the average of the predictions of the crowds composing the supercrowd. 
+The super crowd has the following property : if rmse(c1) < a, rmse(c2) < a for a constant a and two crowds c1, c2, then rmse(supercrowd(c1, c2)) < a. Hence our error can only decrease.
+
+Note also that a super crowd may be composed of supercrowds.
+
+This approach decreased our error again by a small amount, still noticeable. However note that the computation time is the sum of the computation time of the crowds composing the super crowd.
