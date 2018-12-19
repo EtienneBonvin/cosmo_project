@@ -1,11 +1,12 @@
 '''
-Crowd class. Allow to instantiate a crowd of neural networks, significantly decreasing the error of a single, highly trained neural network.
-Each neural networks is trained independantly. The prediction are then made by averaging all the predictions of the neural networks of the crowd.
+CollaborativeCrowd class. Allow to instantiate a crowd of neural networks, significantly decreasing the error of a single, highly trained neural network. This class is different from the basic Crowd class in the sense that each network trains not only on the training matrix but also on the predictions of the networks previously added to the crowd. This choice has been made to see if the neural network could learn from the predictions of the others.
+
+The predictions is then made by averaging all the predictions. A special term is available in the predict method to get the prediction of the last network, the average of the crowd as well as the average of the last 5 networks added to the crowd.
 
 Filename : crowd.py
 Author : Bonvin Etienne
-Creation date : 03/12/18
-Last modified : 17/12/18
+Creation date : 18/12/18
+Last modified : 19/12/18
 '''
 
 
@@ -101,44 +102,6 @@ class CollaborativeCrowd:
         new_model.fit(predictions, self.y, \
                   epochs=EPOCHS, batch_size=BATCH_SIZE, validation_split = VALIDATION_SPLIT, \
                   callbacks=[early_stop, cp_callback])
-        self.models.append(new_model)
-        
-        
-    def __train_one_entity_error_rect(self):
-        '''
-        Creates a new entity (a new neural network) and train it on the train data. 
-        The created neural networks is then added to the crowd.
-        '''
-        new_model = self.__create_and_compile_model()
-        
-        if not os.path.exists("session/"+self.name()):
-            os.makedirs("session/"+self.name())
-        
-        checkpoint_path = "session/"+self.name()+"/"+str(self.size())
-        checkpoint_dir = os.path.dirname(checkpoint_path)
-
-        # Create checkpoint callback
-        cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, save_weights_only = True, verbose = 1)
-        
-        EPOCHS = 200
-        BATCH_SIZE = 32
-        VALIDATION_SPLIT = self.validation_split
-        
-        # Create ealy stop callback to stop earlier loss has converged to avoid overfitting.
-        early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss' if VALIDATION_SPLIT > 0 else 'loss', \
-                                                      patience=20)
-        
-        predictions = []
-        for model in self.models:
-            predictions.append(model.predict(self.X))
-            
-        if self.size() > 0:
-            avg_pred = np.mean(predictions, axis = 0)
-        to_predict = -(self.y - avg_pred) if self.size() > 0 else self.y
-        new_model.fit(self.X, to_predict, \
-                  epochs=EPOCHS, batch_size=BATCH_SIZE, validation_split = VALIDATION_SPLIT, \
-                  callbacks=[early_stop, cp_callback])
-        self.models.append(new_model)
         
         
     def name(self):
@@ -163,14 +126,9 @@ class CollaborativeCrowd:
         '''
         for i in range(number):
             self.__train_one_entity()
-            
-            
-    def train_new_entities_error_rect(self, number = 1):
-        for i in range(number):
-            self.__train_one_entity_error_rect()
         
         
-    def predict(self, X_test):
+    def predict(self, X_test, multiple = False):
         '''
         Predict the output of the given matrix.
         :param : two dimensional ndarray(float)
@@ -182,7 +140,10 @@ class CollaborativeCrowd:
             pred = model.predict(tmp)
             tmp = np.concatenate([tmp, pred], axis = 1)
             predictions.append(pred)
-        return predictions[-1], np.mean(predictions, axis = 0), np.mean(predictions[-5:], axis = 0)
+            
+        if multiple:
+            return predictions[-1], np.mean(predictions, axis = 0), np.mean(predictions[-5:], axis = 0)
+        return np.mean(predictions, axis = 0)
         
     
     def subcrowd_predict(self, X_test, number):
@@ -192,7 +153,14 @@ class CollaborativeCrowd:
         :param : int
         :return : ndarray(float)
         '''
-        return np.mean([model.predict(X_test, batch_size=32) for model in self.models[:number]], axis = 0)
+        tmp = X_test
+        predictions = []
+        for model in self.models[:number]:
+            pred = model.predict(tmp)
+            tmp = np.concatenate([tmp, pred], axis = 1)
+            predictions.append(pred)
+            
+        return np.mean(predictions, axis = 0)
     
     
     def plot_crowd_error(self, X_test, y_test, func):

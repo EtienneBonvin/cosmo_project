@@ -20,7 +20,7 @@ from sklearn.cluster import KMeans
 class Experts:
    
     def __init__(self, X, y, name, nb_layers=8, nb_neurons=128, activation='relu', regularization_factor=0.01, \
-                optimizer_factor=0.001, loss='mse'):
+                optimizer_factor=0.001, loss='mse', validation_split = 0.1):
         '''
         Creates a Crowd of Experts. The X matrix will be the training feature matrix, the y matrix are the predictions for the given X matrix. 
         Initially, the crowd is empty.
@@ -44,6 +44,7 @@ class Experts:
         self.loss = loss
         self.kmeans = None
         self.brain_assignments = None
+        self.validation_split = validation_split
         
         
     def size(self):
@@ -108,10 +109,10 @@ class Experts:
         
         EPOCHS = 200
         BATCH_SIZE = 32
-        VALIDATION_SPLIT = 0.1
+        VALIDATION_SPLIT = self.validation_split
         
         # Early stop callback
-        early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20)
+        early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss' if VALIDATION_SPLIT > 0 else 'loss', patience=20)
         
         expert.fit(self.X, self.y, \
                   epochs=EPOCHS, batch_size=BATCH_SIZE, validation_split = VALIDATION_SPLIT, \
@@ -222,8 +223,8 @@ class Experts:
         
         EPOCHS = 200
         BATCH_SIZE = 32
-        VALIDATION_SPLIT = 0.1
-        early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_acc', patience=20)
+        VALIDATION_SPLIT = self.validation_split
+        early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_acc' if VALIDATION_SPLIT > 0 else 'acc', patience=20)
         
         if self.gatingnet_matrix is None:
             self.__build_gatingnet_matrix()
