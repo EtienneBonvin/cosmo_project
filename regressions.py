@@ -1,6 +1,29 @@
-############################################
-## Method implementations for regressions ##
-############################################
+'''
+Error functions, losses, SGD and cross-validation for ML.
+Implemented error functions:
+    - MSE
+    - MAE
+
+Implemented ML methods:
+    - Least Squares
+    - Ridge regression
+    - SGD
+
+Implemented losses and gradients:
+    - MSE
+    - MAE
+    - Lasso
+
+Helpers for cross-validation:
+    - Polynomial expansion
+    - Data sampling
+    - Train/test sets splitting
+
+Filename : regressions.py
+Author : Xavier Pantet
+Creation date : 20/11/18
+Last modified : 19/12/18
+'''
 
 import numpy as np
 import math
