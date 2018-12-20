@@ -2,11 +2,11 @@ import sys
 import numpy as np
 import math
 
-import regressions as rg
+import src.regressions as rg
 
-import crowd
-import supercrowd as sc
-import collaborative_crowd as cc
+import src.crowd as crowd
+import src.supercrowd as sc
+import src.collaborative_crowd as cc
 
 ########################
 ## Constants & Config ##
