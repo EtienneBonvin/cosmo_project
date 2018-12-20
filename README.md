@@ -57,12 +57,12 @@ This approach gives us results that are a bit better than the ones of the simple
 The idea behind this one is rather simple : we take several highly precise crowds and combine them into a single one through a Composite Design Pattern. The prediction is the average of the predictions of the crowds composing the supercrowd. 
 The super crowd has the following property : if RMSE(c1) < a, RMSE(c2) < a for a constant a and two crowds c1, c2, then RMSE(supercrowd(c1, c2)) < a. Hence our error can only decrease.
 
-Also note that a super crowd may be composed of supercrowds.
+Also note that a super crowd may be composed of supercrowds. the code for this class is located in [supercrowd.py](https://github.com/EtienneBonvin/cosmo_project/blob/master/supercrowd.py).
 
 This approach decreased our error again by a small amount, still noticeable. However the computation time is the sum of the computation time of the crowds composing the super crowd.
 
 ## Conclusion
-Among all methods that we have tried and cross-validated, the one that worked best is __[Etienne?]__ producing a __RMSE of X.XX__, which is almost the half of our first goal was. Moreover, it's important to be noted that this results has been obtained without any domain-specific knowledge. Therefore, we expect the COSMO to be able to increase the precision of the predictions by combining our algorithms with their understanding of the involved scientific material. Finally, we have tried different feature reduction techniques and showed which worked well and which not, which is also a valuable information because of evident performance reasons.
+Among all methods that we have tried and cross-validated, the one that worked best is the __SuperCrowd__ composed of a __CollaborativeCrowd__ and a __simple Crowd__ producing a __RMSE of .342__, which is almost the half of our first goal was. Moreover, it's important to be noted that this results has been obtained without any domain-specific knowledge. Therefore, we expect the COSMO to be able to increase the precision of the predictions by combining our algorithms with their understanding of the involved scientific material. Finally, we have tried different feature reduction techniques and showed which worked well and which not, which is also a valuable information because of evident performance reasons.
 
 > "Go TF..."
 Michele Ceriotti
