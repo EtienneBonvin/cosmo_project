@@ -34,8 +34,8 @@ def ML():
     print("Expected runtime: 1-2 mins...\n")
 
     print("Loading data...")
-    X = np.load(DATA_FOLDER + "pca_x.npy")
-    y = np.load(DATA_FOLDER + "CSD500-r_train-H_total.npy")
+    X = np.load(DATA_FOLDER + "ML/x_train.npy")
+    y = np.load(DATA_FOLDER + "ML/y.npy")
     print("Done!\n")
 
     print("Computing ridge regression with polynomial exp. of degree 1 and lambda = 1e-5")
