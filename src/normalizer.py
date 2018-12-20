@@ -1,3 +1,11 @@
+'''
+Script used to normalize a matrix representing some data.
+
+Filename : normalizer.py
+Author : Etienne Bonvin
+Creation date : 20/11/18
+Last modified : 20/11/18
+'''
 import numpy as np
 
 DATA_FOLDER = 'data/'

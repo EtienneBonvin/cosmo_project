@@ -17,18 +17,33 @@ We shaped the project around three main axes:
 
 Implementation and results for each part are explained in the different subsections below.
 
-The file `run.py` is meant to produce our best results and our report in PDF format can be found [here](https://github.com/EtienneBonvin/cosmo_project/blob/master/report.pdf). The dataset, however, is still being processed by the lab and is not yet ready to be made publicly available.
+The file [run.py](https://github.com/EtienneBonvin/cosmo_project/blob/master/run.py) is meant to produce our best results and our report in PDF format can be found [here](https://github.com/EtienneBonvin/cosmo_project/blob/master/report.pdf). The dataset, however, is still being processed by the lab and is not yet ready to be made publicly available.
+
+## `run.py` in a nutshell
+We have declined `run.py` in two flavors. Since we have tried both machine learning and deep learning approaches, we wanted this script to be able to reproduce our best results for both.
+
+Launching it can be done as follows:
+```
+python run.py [DL|ML]
+```
+If no flag is provided, it will produce results for deep learning by default. If you want to see our results for the machine learning side of the project, you can run it using the appropriate flag.
 
 ## 1. Data Processing and Features Reduction
 The code used to generate our reduced data matrix can be found in [PreProcessing.ipynb](https://github.com/EtienneBonvin/cosmo_project/blob/master/PreProcessing.ipynb). It is shown there that the main algorithm used is `Principal Component Analysis` (PCA), which allows us to reduce the number of features from 15k to 4k while keeping the same RMSE as `Ridge Regression` with a very small regularizer lambda. `Normalization`, `whitening` and `jittering` were also applied to the data to ensure the best predictions possible, but did not always reveal to be much useful. Finally, it turned out that the matrix producing the best results was not the same for machine learning than for deep learning. We explain below how to generate the matrix for both methods:
 
 ### 1.1 Machine learning dataset
-- [TODO]
+- PCA reducing the number of components to 4500 features
+- Normalization
+- Jittering (1% of new samples created)
 ### 1.2 Deep learning dataset
-- [TODO]
+- PCA reducing the number of components to 3004 features
+- Normalization
+
+The jittering was not giving optimal results for deep learning, we suppose that this may be linked to the fact that our trained model notices the small noise that we added and has a harder time finding the relations mappping inputs to outputs.
+3000 features were enough to reproduce the RMSE achieved with the full matrix for deep learning, but we noticed significant improvement on the Machine Learning side when keeping 4500 features instead of 3000.
 
 ## 2. Machine Learning
-The machine learning part ([ML.ipynb](https://github.com/EtienneBonvin/cosmo_project/blob/master/ML.ipynb)) was intended to reproduce results obtained from the lab in the first place and to improve them in a second time. In order to do so, we tried `Least Squares` to get a first hand-on the data, before we decided to move to `Ridge Regression` with `Polynomial Expansion`. Using the appropriate data matrix, this gave us our best result: __RMSE of 0.55__. For completeness, we also implemented the `Lasso` and `MAE loss` but those two methods were not really conclusive. In the first case, we saw that our SGD was either converging too slowly or was too hard to tune (especially the learning factor). In the second case, it simply turns out that `MAE` is not a loss function that suits our problem well. Concrete implementations of the algorithms can be found in [regressions.py](https://github.com/EtienneBonvin/cosmo_project/blob/master/src/regressions.py).
+The machine learning part ([ML.ipynb](https://github.com/EtienneBonvin/cosmo_project/blob/master/ML.ipynb)) was intended to reproduce results obtained from the lab in the first place and to improve them in a second time. In order to do so, we tried `Least Squares` to get a first hand-on the data, before we decided to move to `Ridge Regression` with `Polynomial Expansion`. Using the appropriate data matrix, this gave us our best result: __RMSE of 0.53__. For completeness, we also implemented the `Lasso` and `MAE loss` but those two methods were not really conclusive. In the first case, we saw that our SGD was either converging too slowly or was too hard to tune (especially the learning factor). In the second case, it simply turns out that `MAE` is not a loss function that suits our problem well. Concrete implementations of the algorithms can be found in [regressions.py](https://github.com/EtienneBonvin/cosmo_project/blob/master/src/regressions.py).
 
 
 ## 3. Deep Learning
@@ -46,7 +61,7 @@ The categorization has been made in two different fashions :
 - Using a deep learning classifier similar to the ones used for image classification and compute a vector of probabilities assigning to each neural network the probability that it will perform well on the new sample (method `predict`).
 - Using a k-means algorithm to cluster the data prior to the prediction, then evaluate which neural networks perform best on each cluster and finally, at prediction time, assign the sample to evaluate to closer cluster and use the related neural networks to obtain the prediction.
 
-However, none of this techniques gave us good results, or at least results that are not better than what we had before. This may be explained by the fact that our data is not easily categorizable which was a prerequisite for the method to work efficiently. Hence we dropped the idea of improving our predictions using this technique but we keep it in this notebook for completeness.
+However, none of this techniques gave us good results, or at least results that are not better than what we had before. This may be explained by the fact that our data is not easily categorizable which was a prerequisite for the method to work efficiently. Hence we dropped the idea of improving our predictions using this technique but we keep it in this repository for completeness.
 
 ### 3.3 Collaborative Crowd
 In this approach, we try to make each neural network joining the crowd learn from the predictions of the previously added networks, hoping that it will reduce our error even further. Hence the predictions of the others are added to the training and prediction matrix. The code for this class is located in [collaborative_crowd.py](https://github.com/EtienneBonvin/cosmo_project/blob/master/src/collaborative_crowd.py).
@@ -62,7 +77,7 @@ Also note that a super crowd may be composed of supercrowds. the code for this c
 This approach decreased our error again by a small amount, still noticeable. However the computation time is the sum of the computation time of the crowds composing the super crowd.
 
 ## Conclusion
-Among all methods that we have tried and cross-validated, the one that worked best is the __SuperCrowd__ composed of a __CollaborativeCrowd__ and a __simple crowd__ producing a __RMSE of 0.342__, which is almost the half of our first goal was. Moreover, it's important to be noted that this results has been obtained without any domain-specific knowledge. Therefore, we expect the COSMO to be able to increase the precision of the predictions by combining our algorithms with their understanding of the involved scientific material. Finally, we have tried different feature reduction techniques and showed which worked well and which not, which is also a valuable information because of evident performance reasons.
+Among all methods that we have tried and cross-validated, the one that worked best is the __SuperCrowd__ composed of a __CollaborativeCrowd__ and a __simple crowd__ producing a __RMSE of 0.342__, which is almost the half of what first goal was. Moreover, it's important to be noted that this results has been obtained without any domain-specific knowledge. Therefore, we expect the COSMO to be able to increase the precision of the predictions by combining our algorithms with their understanding of the involved scientific material. Finally, we have tried different feature reduction techniques and showed which worked well and which not, which is also a valuable information because of evident performance reasons.
 
 > "Go TF..."
 Michele Ceriotti

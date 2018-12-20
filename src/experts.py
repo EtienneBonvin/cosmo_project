@@ -303,20 +303,6 @@ class Experts:
                 pred.append(brain_predictions[int(idx)][i][0])
             final_predictions.append(np.mean(pred))
         return final_predictions
-        
-    
-    
-    def subcrowd_predict(self, X_test, number):
-        '''
-        Predict the output of the given matrix using only a given number of entities.
-        :param : two dimensional ndarray(float)
-        :param : int
-        :return : ndarray(float)
-        '''
-        predictions = []
-        for expert in self.experts[:number]:
-            predictions.append(expert.predict(X_test, batch_size=32))
-        return np.mean(predictions, axis=0)
     
     
     def get_gatingnet(self, X_test):
@@ -342,47 +328,6 @@ class Experts:
             return self.gatingnet_matrix
         else:
             print("Please train the gatingnet to access the gatingnet matrix.")
-    
-    
-    def plot_crowd_error(self, X_test, y_test, func):
-        '''
-        Compute error in prediction the subcrowds and plot the error made as a function of the entities used.
-        The error is computed using the given function.
-        :param : two dimensional ndarray(float)
-        :param : ndarray(float)
-        :param : function
-        '''
-        error = []
-        for i in range(len(self.experts) - 1):
-            pred = self.subcrowd_predict(X_test, i + 1)
-            err = func(pred, y_test)
-            error.append(err)
-        plt.plot(error)
-        plt.title("Error vs. number of entities used for prediction")
-        plt.xlabel("Number of entities used")
-        plt.ylabel("Error")
-        plt.show()
-        
-        
-    def plot_error_dist_on_sample(self, sample, y_sample, func, show = True, bins = 4):
-        '''
-        Plot error distribution on a single sample over all experts as an histogram.
-        The error is computed using the given function.
-        :param : ndarray(float)
-        :param : float
-        :param : function
-        :param : boolean
-        '''
-        error = []
-        for m in self.experts:
-            pred = m.predict(np.asarray([sample]))
-            error.append(func(np.asarray([pred]), np.asarray([y_sample])))
-        plt.hist(error, bins = bins)
-        plt.title("Distribution of error over experts for single sample")
-        plt.xlabel("Error")
-        plt.ylabel("Number of experts")
-        if show:
-            plt.show()
     
     
     def restore(self):
