@@ -23,9 +23,15 @@ The file `run.py` is meant to produce our best results and our report in PDF for
 The code used to generate our reduced data matrix can be found in [PreProcessing.ipynb](https://github.com/EtienneBonvin/cosmo_project/blob/master/PreProcessing.ipynb). It is shown there that the main algorithm used is `Principal Component Analysis` (PCA), which allows us to reduce the number of features from 15k to 4k while keeping the same RMSE as `Ridge Regression` with a very small regularizer lambda. `Normalization`, `whitening` and `jittering` were also applied to the data to ensure the best predictions possible, but did not always reveal to be much useful. Finally, it turned out that the matrix producing the best results was not the same for machine learning than for deep learning. We explain below how to generate the matrix for both methods:
 
 ### 1.1 Machine learning dataset
-- [TODO]
+- PCA reducing the number of components to 4500 features
+- Normalization
+- Jittering (1% of new samples created)
 ### 1.2 Deep learning dataset
-- [TODO]
+- PCA reducing the number of components to 3004 features
+- Normalization
+
+The jittering was not giving optimal results for the deep learning, we assume that this may linked to the fact that our trained model notices the small noise that we added and has a harder time finding the relations mappping inputs to outputs.
+3000 features were enough to reproduce the RMSE achived with the full matrix for deep learning, but we notice significant improvement on the Machine Learning side when keeping 4500 features instead of 3000.
 
 ## 2. Machine Learning
 The machine learning part ([ML.ipynb](https://github.com/EtienneBonvin/cosmo_project/blob/master/ML.ipynb)) was intended to reproduce results obtained from the lab in the first place and to improve them in a second time. In order to do so, we tried `Least Squares` to get a first hand-on the data, before we decided to move to `Ridge Regression` with `Polynomial Expansion`. Using the appropriate data matrix, this gave us our best result: __RMSE of 0.55__. For completeness, we also implemented the `Lasso` and `MAE loss` but those two methods were not really conclusive. In the first case, we saw that our SGD was either converging too slowly or was too hard to tune (especially the learning factor). In the second case, it simply turns out that `MAE` is not a loss function that suits our problem well. Concrete implementations of the algorithms can be found in [regressions.py](https://github.com/EtienneBonvin/cosmo_project/blob/master/src/regressions.py).
