@@ -34,8 +34,8 @@ def ML():
     print("Expected runtime: 1-2 mins...\n")
 
     print("Loading data...")
-    X = np.load(DATA_FOLDER + "pca_x.npy")
-    y = np.load(DATA_FOLDER + "CSD500-r_train-H_total.npy")
+    X = np.load(DATA_FOLDER + "ML/x_train.npy")
+    y = np.load(DATA_FOLDER + "ML/y.npy")
     print("Done!\n")
 
     print("Computing ridge regression with polynomial exp. of degree 1 and lambda = 1e-5")
@@ -86,8 +86,8 @@ def DL():
 
     def prepare_DL_data():
         print("Prepare DL data...")
-        X_red = np.load(DATA_FOLDER + "feature_mat_radial_compression_normalized_red.npy")
-        y = np.load(DATA_FOLDER + "CSD500-r_train-H_total.npy")
+        X_red = np.load(DATA_FOLDER + "DL/feature_mat_radial_compression_normalized_red.npy")
+        y = np.load(DATA_FOLDER + "DL/CSD500-r_train-H_total.npy")
 
         train_set_size = int(len(X_red) * TRAIN_SET_PERC)
         # Select random rows of the matrix for train / test set
