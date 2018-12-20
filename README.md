@@ -52,7 +52,7 @@ The categorization has been made in two different fashions :
 - Using a deep learning classifier similar to the ones used for image classification and compute a vector of probabilities assigning to each neural network the probability that it will perform well on the new sample (method `predict`).
 - Using a k-means algorithm to cluster the data prior to the prediction, then evaluate which neural networks perform best on each cluster and finally, at prediction time, assign the sample to evaluate to closer cluster and use the related neural networks to obtain the prediction.
 
-However, none of this techniques gave us good results, or at least results that are not better than what we had before. This may be explained by the fact that our data is not easily categorizable which was a prerequisite for the method to work efficiently. Hence we dropped the idea of improving our predictions using this technique but we keep it in this notebook for completeness.
+However, none of this techniques gave us good results, or at least results that are not better than what we had before. This may be explained by the fact that our data is not easily categorizable which was a prerequisite for the method to work efficiently. Hence we dropped the idea of improving our predictions using this technique but we keep it in this repository for completeness.
 
 ### 3.3 Collaborative Crowd
 In this approach, we try to make each neural network joining the crowd learn from the predictions of the previously added networks, hoping that it will reduce our error even further. Hence the predictions of the others are added to the training and prediction matrix. The code for this class is located in [collaborative_crowd.py](https://github.com/EtienneBonvin/cosmo_project/blob/master/src/collaborative_crowd.py).
@@ -68,7 +68,7 @@ Also note that a super crowd may be composed of supercrowds. the code for this c
 This approach decreased our error again by a small amount, still noticeable. However the computation time is the sum of the computation time of the crowds composing the super crowd.
 
 ## Conclusion
-Among all methods that we have tried and cross-validated, the one that worked best is the __SuperCrowd__ composed of a __CollaborativeCrowd__ and a __simple crowd__ producing a __RMSE of 0.342__, which is almost the half of our first goal was. Moreover, it's important to be noted that this results has been obtained without any domain-specific knowledge. Therefore, we expect the COSMO to be able to increase the precision of the predictions by combining our algorithms with their understanding of the involved scientific material. Finally, we have tried different feature reduction techniques and showed which worked well and which not, which is also a valuable information because of evident performance reasons.
+Among all methods that we have tried and cross-validated, the one that worked best is the __SuperCrowd__ composed of a __CollaborativeCrowd__ and a __simple crowd__ producing a __RMSE of 0.342__, which is almost the half of what first goal was. Moreover, it's important to be noted that this results has been obtained without any domain-specific knowledge. Therefore, we expect the COSMO to be able to increase the precision of the predictions by combining our algorithms with their understanding of the involved scientific material. Finally, we have tried different feature reduction techniques and showed which worked well and which not, which is also a valuable information because of evident performance reasons.
 
 > "Go TF..."
 Michele Ceriotti
