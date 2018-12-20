@@ -1,3 +1,11 @@
+'''
+Runs both machine and deep learning methods producing our best results.
+Filename : run.py
+Authors : Bonvin Etienne & Xavier Pantet
+Creation date : 20/12/18
+Last modified : 20/12/18
+'''
+
 import sys
 import numpy as np
 import math
