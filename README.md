@@ -26,7 +26,7 @@ Launching it can be done as follows:
 ```
 python run.py [DL|ML]
 ```
-If no option is provided, it will produce results for deep learning by default. If you want to see our results for the machine learning side of the project, you can run it using the appropriate option.
+If no flag is provided, it will produce results for deep learning by default. If you want to see our results for the machine learning side of the project, you can run it using the appropriate flag.
 
 ## 1. Data Processing and Features Reduction
 The code used to generate our reduced data matrix can be found in [PreProcessing.ipynb](https://github.com/EtienneBonvin/cosmo_project/blob/master/PreProcessing.ipynb). It is shown there that the main algorithm used is `Principal Component Analysis` (PCA), which allows us to reduce the number of features from 15k to 4k while keeping the same RMSE as `Ridge Regression` with a very small regularizer lambda. `Normalization`, `whitening` and `jittering` were also applied to the data to ensure the best predictions possible, but did not always reveal to be much useful. Finally, it turned out that the matrix producing the best results was not the same for machine learning than for deep learning. We explain below how to generate the matrix for both methods:
