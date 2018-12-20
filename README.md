@@ -30,8 +30,8 @@ The code used to generate our reduced data matrix can be found in [PreProcessing
 - PCA reducing the number of components to 3004 features
 - Normalization
 
-The jittering was not giving optimal results for the deep learning, we assume that this may linked to the fact that our trained model notices the small noise that we added and has a harder time finding the relations mappping inputs to outputs.
-3000 features were enough to reproduce the RMSE achived with the full matrix for deep learning, but we notice significant improvement on the Machine Learning side when keeping 4500 features instead of 3000.
+The jittering was not giving optimal results for deep learning, we suppose that this may be linked to the fact that our trained model notices the small noise that we added and has a harder time finding the relations mappping inputs to outputs.
+3000 features were enough to reproduce the RMSE achieved with the full matrix for deep learning, but we noticed significant improvement on the Machine Learning side when keeping 4500 features instead of 3000.
 
 ## 2. Machine Learning
 The machine learning part ([ML.ipynb](https://github.com/EtienneBonvin/cosmo_project/blob/master/ML.ipynb)) was intended to reproduce results obtained from the lab in the first place and to improve them in a second time. In order to do so, we tried `Least Squares` to get a first hand-on the data, before we decided to move to `Ridge Regression` with `Polynomial Expansion`. Using the appropriate data matrix, this gave us our best result: __RMSE of 0.55__. For completeness, we also implemented the `Lasso` and `MAE loss` but those two methods were not really conclusive. In the first case, we saw that our SGD was either converging too slowly or was too hard to tune (especially the learning factor). In the second case, it simply turns out that `MAE` is not a loss function that suits our problem well. Concrete implementations of the algorithms can be found in [regressions.py](https://github.com/EtienneBonvin/cosmo_project/blob/master/src/regressions.py).
