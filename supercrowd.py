@@ -10,7 +10,6 @@ Last modified : 17/12/18
 
 
 import numpy as np
-from collaborative_crowd import CollaborativeCrowd
 
 
 class SuperCrowd:
