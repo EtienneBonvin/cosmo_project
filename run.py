@@ -2,6 +2,12 @@ import sys
 import numpy as np
 import math
 
+import regressions as rg
+
+import crowd
+import supercrowd as sc
+import collaborative_crowd as cc
+
 ########################
 ## Constants & Config ##
 ########################
@@ -13,8 +19,6 @@ np.random.seed(1)
 ## Machine Learning ##
 ######################
 def ML():
-
-    import regressions as rg
 
     print("##########################################################")
     print("## Prediction using our best Machine Learning algorithm ##")
@@ -49,10 +53,6 @@ def ML():
 ## Deep Learning ##
 ###################
 def DL():
-
-    import crowd
-    import supercrowd as sc
-    import collaborative_crowd as cc
 
     def rmse(pred, real, loop = True):
         '''
