@@ -17,7 +17,16 @@ We shaped the project around three main axes:
 
 Implementation and results for each part are explained in the different subsections below.
 
-The file `run.py` is meant to produce our best results and our report in PDF format can be found [here](https://github.com/EtienneBonvin/cosmo_project/blob/master/report.pdf). The dataset, however, is still being processed by the lab and is not yet ready to be made publicly available.
+The file [run.py](https://github.com/EtienneBonvin/cosmo_project/blob/master/run.py) is meant to produce our best results and our report in PDF format can be found [here](https://github.com/EtienneBonvin/cosmo_project/blob/master/report.pdf). The dataset, however, is still being processed by the lab and is not yet ready to be made publicly available.
+
+## `run.py` in a nutshell
+We have declined `run.py` in two flavors. Since we have tried both machine learning and deep learning approaches, we wanted this script to be able to reproduce our best results for both.
+
+Launching it can be done as follows:
+```
+python run.py [DL|ML]
+```
+If no option is provided, it will produce results for deep learning by default. If you want to see our results for the machine learning side of the project, you can run it using the appropriate option.
 
 ## 1. Data Processing and Features Reduction
 The code used to generate our reduced data matrix can be found in [PreProcessing.ipynb](https://github.com/EtienneBonvin/cosmo_project/blob/master/PreProcessing.ipynb). It is shown there that the main algorithm used is `Principal Component Analysis` (PCA), which allows us to reduce the number of features from 15k to 4k while keeping the same RMSE as `Ridge Regression` with a very small regularizer lambda. `Normalization`, `whitening` and `jittering` were also applied to the data to ensure the best predictions possible, but did not always reveal to be much useful. Finally, it turned out that the matrix producing the best results was not the same for machine learning than for deep learning. We explain below how to generate the matrix for both methods:
